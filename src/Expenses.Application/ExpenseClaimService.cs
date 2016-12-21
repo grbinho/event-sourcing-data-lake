@@ -1,16 +1,39 @@
 ﻿using EventSourcing.Abstractions;
 using Expenses.Application.Commands;
 using Expenses.Domain;
+using System.Linq;
 
 namespace Expenses.Application
 {
-    public class ExpenseClaimService
-    {
+    public class ExpenseClaimService : IExpenseClaimService
+	{
 		private readonly IEventStore EventStore;
 
 		public ExpenseClaimService(IEventStore eventStore)
 		{
 			EventStore = eventStore;
+		}
+
+		/// <summary>
+		/// Create new claim
+		/// </summary>
+		/// <param name="command">Command that describes the claim</param>
+		public void CreateClaim(CreateClaimCommand command)
+		{
+			var resultingEvents = Claim.CreateClaim(new Claim.CreateClaimCommand
+			{
+				Claimant = new Domain.Claimant
+				{
+					Name = "Test Claimant",
+				},
+				Description = command.Description,
+				Expenses = command.Expenses.Select(e => new Domain.Expense
+				{
+					Amount = e.Amount
+				}).ToList()
+			});
+
+			EventStore.StreamEvents(resultingEvents);
 		}
 
 		public void SubmitClaim(SubmitClaimCommand command)
@@ -26,7 +49,7 @@ namespace Expenses.Application
 
 			// Store both event and entity at that point in time?
 			var resultingEvents = EventStore.GetEvents<Claim>(command.ClaimId)
-											.Apply() // Gets current entity object
+											.Replay() // Gets current entity object
 											.Submit(); // New command/mutation on the object
 
 			// Store resulting events into the stream

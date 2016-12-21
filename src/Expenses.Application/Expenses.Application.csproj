@@ -1,6 +1,6 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk" ToolsVersion="15.0">
   <PropertyGroup>
-    <TargetFramework>netstandard1.4</TargetFramework>
+    <TargetFramework>netstandard1.6</TargetFramework>
   </PropertyGroup>
   <ItemGroup>
     <Compile Include="**\*.cs" />
@@ -10,7 +10,7 @@
     <PackageReference Include="NETStandard.Library" Version="1.6" />
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\src\EventSourcing.Abstractions\EventSourcing.Abstractions.csproj" />
-    <ProjectReference Include="..\src\Expenses.Domain\Expenses.Domain.csproj" />
+    <ProjectReference Include="..\EventSourcing.Abstractions\EventSourcing.Abstractions.csproj" />
+    <ProjectReference Include="..\Expenses.Domain\Expenses.Domain.csproj" />
   </ItemGroup>
 </Project>

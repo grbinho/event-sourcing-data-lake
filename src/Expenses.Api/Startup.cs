@@ -1,16 +1,14 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
-using Microsoft.AspNetCore.Builder;
+﻿using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
+using Expenses.Application;
+using EventSourcing.Abstractions;
 
 namespace Expenses.Api
 {
-    public class Startup
+	public class Startup
     {
         public Startup(IHostingEnvironment env)
         {
@@ -29,6 +27,8 @@ namespace Expenses.Api
         {
             // Add framework services.
             services.AddMvc();
+			services.AddScoped<IEventStore>(sp => new NullEventStore());
+			services.AddScoped<IExpenseClaimService>(sp => new ExpenseClaimService(sp.GetService<IEventStore>()));
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.

@@ -3,6 +3,10 @@ using System.Collections.Generic;
 
 namespace EventSourcing.Abstractions
 {
+	/*
+	 * Store implementation handles tenancy!
+	 */
+
 	public interface IEventStore
     {
 		IEnumerable<IEvent<T>> GetEvents<T>(Guid id);

@@ -4,6 +4,7 @@ namespace EventSourcing.Abstractions
 {
 	public interface IEventSourced<T>
     {
-		T Apply(IEnumerable<IEvent<T>> events);
+		long Version { get; }
+		T Replay(IEnumerable<IEvent<T>> events);
     }
 }

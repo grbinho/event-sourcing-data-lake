@@ -1,8 +1,8 @@
 ﻿using EventSourcing.Abstractions;
+using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using ClaimMutation = System.Func<Expenses.Domain.Claim, EventSourcing.Abstractions.ICommand, EventSourcing.Abstractions.IEvent<Expenses.Domain.Claim>>;
 
 namespace Expenses.Domain
 {
@@ -53,25 +53,26 @@ namespace Expenses.Domain
 
 		#region Commands/Mutations
 
-		private static ClaimMutation CreateClaimMutation = (c, cmd) =>
-		{
-			var command = cmd as CreateClaimCommand;			
-			var claim = new Claim(command.Claimant, command.Expenses);
-			claim.Description = command.Description;
+		private static Func<Claim, CreateClaimCommand, ClaimCreatedEvent> CreateClaimMutation = (c, cmd) =>
+		{						
+			var claim = new Claim(cmd.Claimant, cmd.Expenses);
+			claim.Description = cmd.Description;
 			claim.TotalAmount = claim.Expenses.Sum(e => e.Amount);
 			claim.Version++;
+
+			// TOOD: On replay, original DateCreated and DateModified should remain
 
 			return new ClaimCreatedEvent
 			{
 				Entity = claim,
-				Command = command,
-				Mutation = "CreateClaim",
 				EntityId = claim.Id,
+				Command = cmd,
+				Mutation = "CreateClaim",
 				Timestamp = DateTime.UtcNow.Ticks
 			};
 		};
 
-		private static ClaimMutation ChangeClaimantMutation = (claim, cmd) =>
+		private static Func<Claim, ChangeClaimantCommand, ClaimantChangedEvent> ChangeClaimantMutation = (claim, cmd) =>
 		{
 			var command = cmd as ChangeClaimantCommand;
 			claim.Claimant = command.Claimant;
@@ -80,14 +81,14 @@ namespace Expenses.Domain
 			return new ClaimantChangedEvent
 			{
 				Entity = claim,
+				EntityId = claim.Id,
 				Command = command,
 				Mutation = "ChangeClaimant",
-				EntityId = claim.Id,
 				Timestamp = DateTime.UtcNow.Ticks
 			};
 		};
 
-		private static ClaimMutation SubmitMutation = (claim, cmd) =>
+		private static Func<Claim, SubmitCommand, ClaimSubmittedEvent> SubmitMutation = (claim, cmd) =>
 		{
 			claim.Status = ClaimStatus.Submitted;
 			claim.DateModifiedUtc = DateTime.UtcNow;
@@ -95,17 +96,12 @@ namespace Expenses.Domain
 			return new ClaimSubmittedEvent
 			{
 				Entity = claim,
+				EntityId = claim.Id,
 				Command = cmd,
-				Mutation = "Submit"
+				Mutation = "Submit",
+				Timestamp = DateTime.UtcNow.Ticks
 			};
-		};
-
-		private static Dictionary<string, ClaimMutation> _mutations = new Dictionary<string, ClaimMutation>
-		{
-			["CreateClaim"] = CreateClaimMutation,
-			["ChangeClaimant"] = ChangeClaimantMutation,
-			["Submit"] = SubmitMutation
-		};
+		};		
 
 		// Build up Claim object by applying mutations from all events
 		// If we 
@@ -130,47 +126,32 @@ namespace Expenses.Domain
 		 * This also allows us to change some of the logic and replay the events.
 		*/
 
-		public class CreateClaimCommand: ICommand
+		public class CreateClaimCommand: Command
 		{
 			public string Description { get; set; }
 			public IList<Expense> Expenses { get; set; }
 			public Claimant Claimant { get; set; }
-		}
+		}		
 
-		public class ClaimCreatedEvent : IEvent<Claim>
+		public class ClaimCreatedEvent : Event<Claim, CreateClaimCommand>
 		{
-			public ICommand Command { get; set; }
-			public Claim Entity { get; set; }
-			public Guid EntityId { get; set; }
-			public string Mutation { get; set; }
-			public long Timestamp { get; set; }
 		}
 
-		public class ChangeClaimantCommand: ICommand
+		public class ChangeClaimantCommand: Command
 		{
 			public Claimant Claimant { get; set; }
 		}
 
-		public class ClaimantChangedEvent: IEvent<Claim>
-		{
-			public string Mutation { get; set; }
-			public ICommand Command { get; set; }
-			public Claim Entity { get; set; }
-			public Guid EntityId { get; set; }
-			public long Timestamp { get; set; }
-		}
-
-		public class SubmitCommand : ICommand
+		public class ClaimantChangedEvent: Event<Claim, ChangeClaimantCommand>
 		{
 		}
 
-		public class ClaimSubmittedEvent: IEvent<Claim>
+		public class SubmitCommand : Command
 		{
-			public string Mutation { get; set; }
-			public ICommand Command { get; set; }
-			public Claim Entity { get; set; }
-			public Guid EntityId { get; set; }
-			public long Timestamp { get; set; }
+		}
+
+		public class ClaimSubmittedEvent: Event<Claim, SubmitCommand>
+		{
 		}
 
 
@@ -184,23 +165,47 @@ namespace Expenses.Domain
 
 		public ClaimSubmittedEvent Submit()
 		{
-			var result = SubmitMutation(this, new SubmitCommand());
-			return result as ClaimSubmittedEvent;
+			return SubmitMutation(this, new SubmitCommand());			
 		}
 
 		public static ClaimCreatedEvent CreateClaim(CreateClaimCommand command)
 		{
-			var result = CreateClaimMutation(null, command);
-			return result as ClaimCreatedEvent;
+			return CreateClaimMutation(null, command);			
 		}
 
-		public Claim Replay(IEnumerable<IEvent<Claim>> events)
+		public Claim Replay(IEnumerable<Tuple<Type,string>> events)
 		{
 			var claim = new Claim();
 			// Starting form beginning, there is either create or snapshot event that gives us initial object
 			foreach (var @event in events)
-			{
-				_mutations[@event.Mutation](claim, @event.Command);
+			{			
+				switch (@event.Item1.Name)
+				{
+					case "ClaimCreatedEvent":
+						{
+							var evt = JsonConvert.DeserializeObject<ClaimCreatedEvent>(@event.Item2);
+							var result = CreateClaimMutation(claim, evt.Command);
+							claim = result.Entity;
+							claim.Id = evt.EntityId;
+							break;
+						}
+					case "ClaimantChangedEvent":
+						{
+							var evt = JsonConvert.DeserializeObject<ClaimantChangedEvent>(@event.Item2);
+							var result = ChangeClaimantMutation(claim, evt.Command);
+							claim = result.Entity;
+							break;
+						}
+					case "ClaimSubmittedEvent":
+						{
+							var evt = JsonConvert.DeserializeObject<ClaimSubmittedEvent>(@event.Item2);
+							var result = SubmitMutation(claim, evt.Command);
+							claim = result.Entity;
+							break;
+						}
+					default:
+						break;
+				}		
 			}
 
 			return claim;

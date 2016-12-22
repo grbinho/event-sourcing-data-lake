@@ -5,6 +5,7 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Expenses.Application;
 using EventSourcing.Abstractions;
+using Expenses.Domain;
 
 namespace Expenses.Api
 {
@@ -27,7 +28,7 @@ namespace Expenses.Api
         {
             // Add framework services.
             services.AddMvc();
-			services.AddScoped<IEventStore>(sp => new NullEventStore());
+			services.AddSingleton<IEventStore>(sp => new InMemoryEventStore());
 			services.AddScoped<IExpenseClaimService>(sp => new ExpenseClaimService(sp.GetService<IEventStore>()));
         }
 

@@ -33,7 +33,7 @@ namespace Expenses.Application
 				}).ToList()
 			});
 
-			EventStore.StreamEvents(resultingEvents);
+			EventStore.StreamEvents<Claim.ClaimCreatedEvent, Claim, Claim.CreateClaimCommand>(resultingEvents);
 		}
 
 		public void SubmitClaim(SubmitClaimCommand command)
@@ -48,12 +48,12 @@ namespace Expenses.Application
 			//Submit can generate events and/or return new state of the entity
 
 			// Store both event and entity at that point in time?
-			var resultingEvents = EventStore.GetEvents<Claim>(command.ClaimId)
-											.Replay() // Gets current entity object
+			var resultingEvents = EventStore.GetEvents(command.ClaimId)
+											.Replay<Claim>() // Gets current entity object
 											.Submit(); // New command/mutation on the object
 
 			// Store resulting events into the stream
-			EventStore.StreamEvents(resultingEvents);
+			EventStore.StreamEvents<Claim.ClaimSubmittedEvent, Claim, Claim.SubmitCommand>(resultingEvents);
 
 			// If this give as a correct result, we send changed claim to the event store
 			

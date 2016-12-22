@@ -9,9 +9,17 @@ namespace EventSourcing.Abstractions
 
 	public interface IEventStore
     {
-		IEnumerable<IEvent<T>> GetEvents<T>(Guid id);
-		void StreamEvents<T>(IEnumerable<IEvent<T>> events);
-		void StreamEvents<T>(IEvent<T> @event);
+		// If we return Tuple<Type,string> We need to handle deserialization, but that is probably the only way it can work
+		IEnumerable<Tuple<Type, string>> GetEvents(Guid id);
+		/// <summary>
+		/// 
+		/// </summary>
+		/// <typeparam name="T">Actual event type</typeparam>
+		/// <typeparam name="E">Entity type</typeparam>
+		/// <typeparam name="C">Command type</typeparam>
+		/// <param name="events"></param>
+		void StreamEvents<T,E,C>(IEnumerable<T> events) where T: Event<E,C>;
+		void StreamEvents<T,E,C>(T @event) where T: Event<E,C>;
 	}
 
 	/*

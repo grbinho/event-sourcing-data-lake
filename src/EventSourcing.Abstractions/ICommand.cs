@@ -4,7 +4,7 @@ using System.Text;
 
 namespace EventSourcing.Abstractions
 {
-    public interface ICommand
+    public abstract class Command
     {
     }
 }

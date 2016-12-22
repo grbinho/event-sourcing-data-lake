@@ -20,5 +20,12 @@ namespace Expenses.Api.Controllers
 			_service.CreateClaim(command);
 			return Ok();
 		}
+
+		[HttpPost("submit")]
+		public IActionResult SubmitClaim([FromBody] SubmitClaimCommand command)
+		{
+			_service.SubmitClaim(command);
+			return Ok();
+		}
     }
 }

@@ -7,7 +7,7 @@ namespace EventSourcing.Abstractions
     {
 		long Version { get; }
 		/// <summary>
-		/// 
+		///
 		/// </summary>
 		/// <typeparam name="T">Actual Event type</typeparam>
 		/// <typeparam name="C">Type of a command</typeparam>

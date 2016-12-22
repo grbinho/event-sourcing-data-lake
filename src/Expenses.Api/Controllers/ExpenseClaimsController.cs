@@ -16,7 +16,7 @@ namespace Expenses.Api.Controllers
 
 		[HttpPost("create")]
 		public IActionResult CreateClaim([FromBody] CreateClaimCommand command)
-		{		
+		{
 			_service.CreateClaim(command);
 			return Ok();
 		}

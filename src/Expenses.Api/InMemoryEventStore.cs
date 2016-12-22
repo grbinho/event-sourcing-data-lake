@@ -8,25 +8,22 @@ namespace Expenses.Api
 	public class InMemoryEventStore : IEventStore
 	{
 		IDictionary<Guid, List<Tuple<Type,string>>> _events = new Dictionary<Guid, List<Tuple<Type, string>>>();
-				
+
 		public IEnumerable<Tuple<Type,string>> GetEvents(Guid id)
 		{
 			var events = _events[id];
-			foreach (var @event in events)
-			{
-				yield return @event;
-			}
+			return events;
 		}
 
-		public void StreamEvents<T, E, C>(IEnumerable<T> events) where T : Event<E, C>
+		public void StreamEvents<T>(IEnumerable<T> events) where T: Event
 		{
 			foreach (var @event in events)
 			{
-				StreamEvents<T,E,C>(@event);
+				StreamEvents<T>(@event);
 			}
 		}
 
-		public void StreamEvents<T, E, C>(T @event) where T : Event<E, C>
+		public void StreamEvents<T>(T @event) where T: Event
 		{
 			if (_events.ContainsKey(@event.EntityId))
 			{
@@ -43,7 +40,7 @@ namespace Expenses.Api
 						new Tuple<Type, string>(
 							typeof(T),
 							JsonConvert.SerializeObject(@event)
-					)});			
+					)});
 			}
 
 			Console.WriteLine("Streaming event for: {0}", @event.EntityId);

@@ -33,7 +33,7 @@ namespace Expenses.Application
 				}).ToList()
 			});
 
-			EventStore.StreamEvents<Claim.ClaimCreatedEvent, Claim, Claim.CreateClaimCommand>(resultingEvents);
+			EventStore.StreamEvents(resultingEvents);
 		}
 
 		public void SubmitClaim(SubmitClaimCommand command)
@@ -43,7 +43,7 @@ namespace Expenses.Application
 			// This retrieves current state of the claim and calls Submit on it.
 			// Claim object reflects the state claim had at the time this is called.
 			// Before submit is executed, actual state could have changed.
-			// Submit needs to validate 
+			// Submit needs to validate
 
 			//Submit can generate events and/or return new state of the entity
 
@@ -53,10 +53,10 @@ namespace Expenses.Application
 											.Submit(); // New command/mutation on the object
 
 			// Store resulting events into the stream
-			EventStore.StreamEvents<Claim.ClaimSubmittedEvent, Claim, Claim.SubmitCommand>(resultingEvents);
+			EventStore.StreamEvents(resultingEvents);
 
 			// If this give as a correct result, we send changed claim to the event store
-			
+
 		}
 
     }

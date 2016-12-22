@@ -3,8 +3,14 @@ using System.Collections.Generic;
 
 namespace EventSourcing.Abstractions
 {
-	public class Event<TEntity, TCommand>
-    {
+	public abstract class Event
+	{
+		// Consider adding application version for which this Event happened.
+		// Consider adding request/transaction Id
+		/// <summary>
+		/// Id of the event.
+		/// </summary>
+		public Guid Id { get; set; }
 		/// <summary>
 		/// Timestamp of the event. Utc Ticks.
 		/// </summary>
@@ -14,13 +20,16 @@ namespace EventSourcing.Abstractions
 		/// </summary>
 		public Guid EntityId { get; set; }
 		/// <summary>
-		/// Actual entity in the state that corresponds with this event.
-		/// </summary>
-		public TEntity Entity { get; set; }
-		/// <summary>
 		/// Mutation that lead to this event
 		/// </summary>
 		public string Mutation { get; set; }
+	}
+	public abstract class Event<TEntity, TCommand> : Event
+    {
+		/// <summary>
+		/// Actual entity in the state that corresponds with this event.
+		/// </summary>
+		public TEntity Entity { get; set; }
 		/// <summary>
 		/// Command that was supplied for the mutation
 		/// </summary>

@@ -15,7 +15,7 @@ namespace Expenses.Domain
 		public string Description { get; set; }
 		public ClaimStatus Status { get; private set; }
 		public IList<Expense> Expenses { get; set; }
-		public decimal TotalAmount { get; private set; }		
+		public decimal TotalAmount { get; private set; }
 		public long Version { get; private set; }
 		#region Constructors
 
@@ -40,7 +40,7 @@ namespace Expenses.Domain
 		private Claim(Claimant claimant, IList<Expense> expenses)
 			:this(claimant)
 		{
-			if(expenses == null)			
+			if(expenses == null)
 				throw new ArgumentNullException(nameof(expenses));
 
 			if (expenses.Count == 0)
@@ -53,8 +53,13 @@ namespace Expenses.Domain
 
 		#region Commands/Mutations
 
+		/*
+		 * Mutation only mutate state of the object. They should not generate any commands or
+		 * any additional external side effects. That can be done in the Methods themselves.
+		 */
+
 		private static Func<Claim, CreateClaimCommand, ClaimCreatedEvent> CreateClaimMutation = (c, cmd) =>
-		{						
+		{
 			var claim = new Claim(cmd.Claimant, cmd.Expenses);
 			claim.Description = cmd.Description;
 			claim.TotalAmount = claim.Expenses.Sum(e => e.Amount);
@@ -64,6 +69,7 @@ namespace Expenses.Domain
 
 			return new ClaimCreatedEvent
 			{
+				Id = Guid.NewGuid(),
 				Entity = claim,
 				EntityId = claim.Id,
 				Command = cmd,
@@ -80,6 +86,7 @@ namespace Expenses.Domain
 			claim.Version++;
 			return new ClaimantChangedEvent
 			{
+				Id = Guid.NewGuid(),
 				Entity = claim,
 				EntityId = claim.Id,
 				Command = command,
@@ -95,18 +102,19 @@ namespace Expenses.Domain
 			claim.Version++;
 			return new ClaimSubmittedEvent
 			{
+				Id = Guid.NewGuid(),
 				Entity = claim,
 				EntityId = claim.Id,
 				Command = cmd,
 				Mutation = "Submit",
 				Timestamp = DateTime.UtcNow.Ticks
 			};
-		};		
+		};
 
 		// Build up Claim object by applying mutations from all events
-		// If we 
-		
-		
+		// If we
+
+
 
 		#endregion
 
@@ -115,12 +123,12 @@ namespace Expenses.Domain
 
 		#region Commands and Events
 
-		/* 
+		/*
 		 * Each method that modifies state is an event handler.
 		 * Some commands have implicit state changes (Submit)
 		 * Others have input parameters (ChangeClaimant) and can have additional
-		 * 
-		 * If we only store command name, 
+		 *
+		 * If we only store command name,
 		 * we can't have current state without the code in domain model.
 		 * There could be multiple transformations related to that event happening.
 		 * This also allows us to change some of the logic and replay the events.
@@ -131,7 +139,7 @@ namespace Expenses.Domain
 			public string Description { get; set; }
 			public IList<Expense> Expenses { get; set; }
 			public Claimant Claimant { get; set; }
-		}		
+		}
 
 		public class ClaimCreatedEvent : Event<Claim, CreateClaimCommand>
 		{
@@ -165,12 +173,12 @@ namespace Expenses.Domain
 
 		public ClaimSubmittedEvent Submit()
 		{
-			return SubmitMutation(this, new SubmitCommand());			
+			return SubmitMutation(this, new SubmitCommand());
 		}
 
 		public static ClaimCreatedEvent CreateClaim(CreateClaimCommand command)
 		{
-			return CreateClaimMutation(null, command);			
+			return CreateClaimMutation(null, command);
 		}
 
 		public Claim Replay(IEnumerable<Tuple<Type,string>> events)
@@ -178,7 +186,7 @@ namespace Expenses.Domain
 			var claim = new Claim();
 			// Starting form beginning, there is either create or snapshot event that gives us initial object
 			foreach (var @event in events)
-			{			
+			{
 				switch (@event.Item1.Name)
 				{
 					case "ClaimCreatedEvent":
@@ -205,7 +213,7 @@ namespace Expenses.Domain
 						}
 					default:
 						break;
-				}		
+				}
 			}
 
 			return claim;

@@ -23,6 +23,7 @@
     <PackageReference Include="Newtonsoft.Json" Version="9.0.1" />
   </ItemGroup>
   <ItemGroup>
+    <ProjectReference Include="..\..\EventSourcing.EventStore.FileSystem\EventSourcing.EventStore.FileSystem.csproj" />
     <ProjectReference Include="..\EventSourcing.Abstractions\EventSourcing.Abstractions.csproj" />
     <ProjectReference Include="..\EventSourcing.EventStore.InMemory\EventSourcing.EventStore.InMemory.csproj" />
     <ProjectReference Include="..\Expenses.Application\Expenses.Application.csproj" />

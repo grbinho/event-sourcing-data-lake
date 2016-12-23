@@ -5,7 +5,7 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Expenses.Application;
 using EventSourcing.Abstractions;
-using Expenses.Domain;
+using EventSourcing.EventStore.InMemory;
 
 namespace Expenses.Api
 {

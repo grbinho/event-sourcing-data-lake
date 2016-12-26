@@ -20,6 +20,7 @@ namespace EventSourcing.EventStore.FileSystem
 		private readonly Dictionary<Guid, FileStream> _streamWriterCache = new Dictionary<Guid, FileStream>();
 		private readonly Dictionary<Guid, FileStream> _streamReaderCache = new Dictionary<Guid, FileStream>();
 		private readonly Stopwatch stopwatch = new Stopwatch();
+
 		/// <summary>
 		/// Creates new file system store.
 		/// </summary>
@@ -53,24 +54,12 @@ namespace EventSourcing.EventStore.FileSystem
 
 		private IEnumerable<Tuple<Type, string>> ReadEvents(Guid entityId)
 		{
-			// TODO: Add more timings.
-			var readFileStopwatch = new Stopwatch();
-			var desearializeStopwatch = new Stopwatch();
-
 			var fileContent = string.Empty;
-
-			readFileStopwatch.Start();
-
 			// TODO: This can also be cached, including the data. Then we just need to read new data.
 			// Without Data caching, seek position needs to get reset every time
 			var reader = GetReader(entityId, true);
 			fileContent = reader.ReadToEnd();
-
-			readFileStopwatch.Stop();
-
-			desearializeStopwatch.Start();
-
-			foreach(var line in fileContent.Split('\n'))
+			foreach (var line in fileContent.Split('\n'))
 			{
 				if(line.Length > 0)
 				{
@@ -80,25 +69,11 @@ namespace EventSourcing.EventStore.FileSystem
 					yield return new Tuple<Type, string>(Type.GetType(eventLine.Type), eventLine.Data);
 				}
 			}
-
-			desearializeStopwatch.Stop();
-
-			Console.WriteLine($"Reading events duration. Reading file: {readFileStopwatch.ElapsedMilliseconds} ms\tDeserialization: {desearializeStopwatch.ElapsedMilliseconds} ms.");
 		}
 
 		private void AppendEventToFile<T>(T @event) where T : Event
 		{
-			var serializationStopwatch = new Stopwatch();
-			var writingStopwatch = new Stopwatch();
-			var flushStopwatch = new Stopwatch();
-
-			writingStopwatch.Start();
-
 			var writer = GetWriter(@event.EntityId);
-
-			writingStopwatch.Stop();
-
-			serializationStopwatch.Start();
 			//TODO: Check versioning
 			var eventLine = new EventLine
 			{
@@ -109,21 +84,11 @@ namespace EventSourcing.EventStore.FileSystem
 
 			var lineData = JsonConvert.SerializeObject(eventLine);
 
-			serializationStopwatch.Stop();
-
-
 			//var eventData = JsonConvert.SerializeObject(@event);
 			//TOOD: Escape AssemblyQualifiedName
 			//writer.WriteLine($"{DateTime.UtcNow.Ticks},{EscapeCsv(typeof(T).AssemblyQualifiedName)},{EscapeCsv(eventData)}\n");
 			writer.WriteLine(lineData);
-
-			flushStopwatch.Start();
-
 			writer.Flush();
-
-			flushStopwatch.Stop();
-
-			Console.WriteLine($"Writing event duration. Serialization: {serializationStopwatch.ElapsedMilliseconds} ms, {serializationStopwatch.ElapsedTicks} ticks.\tGetting writer: {writingStopwatch.ElapsedMilliseconds} ms, {writingStopwatch.ElapsedTicks} ticks. Writer flush: {flushStopwatch.ElapsedMilliseconds} ms, {flushStopwatch.ElapsedTicks} ticks.");
 		}
 
 		private StreamWriter GetWriter(Guid entityId)

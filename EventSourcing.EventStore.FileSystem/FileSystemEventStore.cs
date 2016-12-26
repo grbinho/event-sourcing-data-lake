@@ -11,9 +11,14 @@ namespace EventSourcing.EventStore.FileSystem
 	{
 		private readonly string _tenatId;
 		private readonly string _rootPath;
+
+		// TODO: Concurent dictionaries.
+
 		private readonly Dictionary<Guid, string> _pathCache = new Dictionary<Guid, string>();
 		private readonly Dictionary<Guid, StreamWriter> _writerCache = new Dictionary<Guid, StreamWriter>();
-		private readonly Dictionary<Guid, FileStream> _streamCache = new Dictionary<Guid, FileStream>();
+		private readonly Dictionary<Guid, StreamReader> _readerCache = new Dictionary<Guid, StreamReader>();
+		private readonly Dictionary<Guid, FileStream> _streamWriterCache = new Dictionary<Guid, FileStream>();
+		private readonly Dictionary<Guid, FileStream> _streamReaderCache = new Dictionary<Guid, FileStream>();
 		private readonly Stopwatch stopwatch = new Stopwatch();
 		/// <summary>
 		/// Creates new file system store.
@@ -56,11 +61,10 @@ namespace EventSourcing.EventStore.FileSystem
 
 			readFileStopwatch.Start();
 
-			using (var eventsFile = File.Open(GetFilePath(entityId), FileMode.Open, FileAccess.Read, FileShare.ReadWrite))
-			using (var reader = new StreamReader(eventsFile))
-			{
-				fileContent = reader.ReadToEnd();
-			}
+			// TODO: This can also be cached, including the data. Then we just need to read new data.
+			// Without Data caching, seek position needs to get reset every time
+			var reader = GetReader(entityId, true);
+			fileContent = reader.ReadToEnd();
 
 			readFileStopwatch.Stop();
 
@@ -70,7 +74,9 @@ namespace EventSourcing.EventStore.FileSystem
 			{
 				if(line.Length > 0)
 				{
-					var eventLine = JsonConvert.DeserializeObject<EventLine>(line);
+					// In case of reseting the reader, we get an empty character at the begining of first line.
+					// TODO: Investigate why.
+					var eventLine = JsonConvert.DeserializeObject<EventLine>(line.Trim());
 					yield return new Tuple<Type, string>(Type.GetType(eventLine.Type), eventLine.Data);
 				}
 			}
@@ -125,12 +131,12 @@ namespace EventSourcing.EventStore.FileSystem
 			FileStream eventsFile;
 			StreamWriter eventsWriter;
 
-			if (_streamCache.ContainsKey(entityId))
-				eventsFile = _streamCache[entityId];
+			if (_streamWriterCache.ContainsKey(entityId))
+				eventsFile = _streamWriterCache[entityId];
 			else
 			{
 				eventsFile = File.Open(GetFilePath(entityId), FileMode.Append, FileAccess.Write, FileShare.Read);
-				_streamCache.Add(entityId, eventsFile);
+				_streamWriterCache.Add(entityId, eventsFile);
 			}
 
 			if (_writerCache.ContainsKey(entityId))
@@ -142,6 +148,30 @@ namespace EventSourcing.EventStore.FileSystem
 			}
 
 			return eventsWriter;
+		}
+
+		private StreamReader GetReader(Guid entityId, bool reset = false)
+		{
+			FileStream eventsFile;
+			StreamReader eventsReader;
+
+			if (_streamReaderCache.ContainsKey(entityId))
+				eventsFile = _streamReaderCache[entityId];
+			else
+			{
+				eventsFile = File.Open(GetFilePath(entityId), FileMode.Open, FileAccess.Read, FileShare.ReadWrite);
+				_streamReaderCache.Add(entityId, eventsFile);
+			}
+
+			if (_readerCache.ContainsKey(entityId) && !reset)
+				eventsReader = _readerCache[entityId];
+			else
+			{
+				eventsReader = new StreamReader(eventsFile, System.Text.Encoding.UTF8);
+				_readerCache[entityId] = eventsReader;
+			}
+
+			return eventsReader;
 		}
 
 		private string GetFilePath(Guid entityId)
@@ -204,9 +234,14 @@ namespace EventSourcing.EventStore.FileSystem
 				foreach (var w in _writerCache.Values)
 					if (w != null) w.Dispose();
 
-
-				foreach (var s in _streamCache.Values)
+				foreach (var s in _streamWriterCache.Values)
 					if (s != null) s.Dispose();
+
+				foreach (var r in _readerCache.Values)
+					if (r != null) r.Dispose();
+
+				foreach (var sr in _streamReaderCache.Values)
+					if (sr != null) sr.Dispose();
 			}
 		}
 

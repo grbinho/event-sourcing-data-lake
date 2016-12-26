@@ -46,12 +46,23 @@ namespace EventSourcing.EventStore.FileSystem
 
 		private IEnumerable<Tuple<Type, string>> ReadEvents(Guid entityId)
 		{
+			// TODO: Add more timings.
+			var readFileStopwatch = new Stopwatch();
+			var desearializeStopwatch = new Stopwatch();
+
 			var fileContent = string.Empty;
+
+			readFileStopwatch.Start();
+
 			using (var eventsFile = File.Open(GetFilePath(entityId), FileMode.Open, FileAccess.Read, FileShare.ReadWrite))
 			using (var reader = new StreamReader(eventsFile))
 			{
 				fileContent = reader.ReadToEnd();
 			}
+
+			readFileStopwatch.Stop();
+
+			desearializeStopwatch.Start();
 
 			foreach(var line in fileContent.Split('\n'))
 			{
@@ -61,26 +72,54 @@ namespace EventSourcing.EventStore.FileSystem
 					yield return new Tuple<Type, string>(Type.GetType(eventLine.Type), eventLine.Data);
 				}
 			}
+
+			desearializeStopwatch.Stop();
+
+			Console.WriteLine($"Reading events duration. Reading file: {readFileStopwatch.ElapsedMilliseconds} ms\tDeserialization: {desearializeStopwatch.ElapsedMilliseconds} ms.");
 		}
 
 		private void AppendEventToFile<T>(T @event) where T : Event
 		{
-			using (var eventsFile = File.Open(GetFilePath(@event.EntityId), FileMode.Append, FileAccess.Write, FileShare.Read))
-			using (var writer = new StreamWriter(eventsFile, System.Text.Encoding.UTF8))
-			{
-				//TODO: Check versioning
-				var eventLine = new EventLine
-				{
-					Timestamp = DateTime.UtcNow.Ticks,
-					Type = typeof(T).AssemblyQualifiedName,
-					Data = JsonConvert.SerializeObject(@event)
-				};
+			var serializationStopwatch = new Stopwatch();
+			var writingStopwatch = new Stopwatch();
+			var writerClosing = new Stopwatch();
+			var fileClosing = new Stopwatch();
 
-				//var eventData = JsonConvert.SerializeObject(@event);
-				//TOOD: Escape AssemblyQualifiedName
-				//writer.WriteLine($"{DateTime.UtcNow.Ticks},{EscapeCsv(typeof(T).AssemblyQualifiedName)},{EscapeCsv(eventData)}\n");
-				writer.WriteLine(JsonConvert.SerializeObject(eventLine));
+
+			using (var eventsFile = File.Open(GetFilePath(@event.EntityId), FileMode.Append, FileAccess.Write, FileShare.Read))
+			{
+
+
+				using (var writer = new StreamWriter(eventsFile, System.Text.Encoding.UTF8))
+				{
+					serializationStopwatch.Start();
+					//TODO: Check versioning
+					var eventLine = new EventLine
+					{
+						Timestamp = DateTime.UtcNow.Ticks,
+						Type = typeof(T).AssemblyQualifiedName,
+						Data = JsonConvert.SerializeObject(@event)
+					};
+
+					var lineData = JsonConvert.SerializeObject(eventLine);
+
+					serializationStopwatch.Stop();
+					writingStopwatch.Start();
+					//var eventData = JsonConvert.SerializeObject(@event);
+					//TOOD: Escape AssemblyQualifiedName
+					//writer.WriteLine($"{DateTime.UtcNow.Ticks},{EscapeCsv(typeof(T).AssemblyQualifiedName)},{EscapeCsv(eventData)}\n");
+					writer.WriteLine(lineData);
+					writer.Flush();
+					writingStopwatch.Stop();
+					writerClosing.Start();
+				}
+				writerClosing.Stop();
+				fileClosing.Start();
 			}
+
+			fileClosing.Stop();
+
+			Console.WriteLine($"Writing event duration. Serialization: {serializationStopwatch.ElapsedMilliseconds} ms, {serializationStopwatch.ElapsedTicks} ticks.\tWriting: {writingStopwatch.ElapsedMilliseconds} ms, {writingStopwatch.ElapsedTicks} ticks. Writer closing: {writerClosing.ElapsedMilliseconds} ms. File closing: {fileClosing.ElapsedTicks} ticks.");
 		}
 
 		private string GetFilePath(Guid entityId)

@@ -7,11 +7,13 @@ using System.IO;
 
 namespace EventSourcing.EventStore.FileSystem
 {
-	public sealed class FileSystemEventStore : IEventStore
+	public sealed class FileSystemEventStore : IEventStore, IDisposable
 	{
 		private readonly string _tenatId;
 		private readonly string _rootPath;
 		private readonly Dictionary<Guid, string> _pathCache = new Dictionary<Guid, string>();
+		private readonly Dictionary<Guid, StreamWriter> _writerCache = new Dictionary<Guid, StreamWriter>();
+		private readonly Dictionary<Guid, FileStream> _streamCache = new Dictionary<Guid, FileStream>();
 		private readonly Stopwatch stopwatch = new Stopwatch();
 		/// <summary>
 		/// Creates new file system store.
@@ -82,44 +84,64 @@ namespace EventSourcing.EventStore.FileSystem
 		{
 			var serializationStopwatch = new Stopwatch();
 			var writingStopwatch = new Stopwatch();
-			var writerClosing = new Stopwatch();
-			var fileClosing = new Stopwatch();
+			var flushStopwatch = new Stopwatch();
 
+			writingStopwatch.Start();
 
-			using (var eventsFile = File.Open(GetFilePath(@event.EntityId), FileMode.Append, FileAccess.Write, FileShare.Read))
+			var writer = GetWriter(@event.EntityId);
+
+			writingStopwatch.Stop();
+
+			serializationStopwatch.Start();
+			//TODO: Check versioning
+			var eventLine = new EventLine
 			{
+				Timestamp = DateTime.UtcNow.Ticks,
+				Type = typeof(T).AssemblyQualifiedName,
+				Data = JsonConvert.SerializeObject(@event)
+			};
+
+			var lineData = JsonConvert.SerializeObject(eventLine);
+
+			serializationStopwatch.Stop();
 
 
-				using (var writer = new StreamWriter(eventsFile, System.Text.Encoding.UTF8))
-				{
-					serializationStopwatch.Start();
-					//TODO: Check versioning
-					var eventLine = new EventLine
-					{
-						Timestamp = DateTime.UtcNow.Ticks,
-						Type = typeof(T).AssemblyQualifiedName,
-						Data = JsonConvert.SerializeObject(@event)
-					};
+			//var eventData = JsonConvert.SerializeObject(@event);
+			//TOOD: Escape AssemblyQualifiedName
+			//writer.WriteLine($"{DateTime.UtcNow.Ticks},{EscapeCsv(typeof(T).AssemblyQualifiedName)},{EscapeCsv(eventData)}\n");
+			writer.WriteLine(lineData);
 
-					var lineData = JsonConvert.SerializeObject(eventLine);
+			flushStopwatch.Start();
 
-					serializationStopwatch.Stop();
-					writingStopwatch.Start();
-					//var eventData = JsonConvert.SerializeObject(@event);
-					//TOOD: Escape AssemblyQualifiedName
-					//writer.WriteLine($"{DateTime.UtcNow.Ticks},{EscapeCsv(typeof(T).AssemblyQualifiedName)},{EscapeCsv(eventData)}\n");
-					writer.WriteLine(lineData);
-					writer.Flush();
-					writingStopwatch.Stop();
-					writerClosing.Start();
-				}
-				writerClosing.Stop();
-				fileClosing.Start();
+			writer.Flush();
+
+			flushStopwatch.Stop();
+
+			Console.WriteLine($"Writing event duration. Serialization: {serializationStopwatch.ElapsedMilliseconds} ms, {serializationStopwatch.ElapsedTicks} ticks.\tGetting writer: {writingStopwatch.ElapsedMilliseconds} ms, {writingStopwatch.ElapsedTicks} ticks. Writer flush: {flushStopwatch.ElapsedMilliseconds} ms, {flushStopwatch.ElapsedTicks} ticks.");
+		}
+
+		private StreamWriter GetWriter(Guid entityId)
+		{
+			FileStream eventsFile;
+			StreamWriter eventsWriter;
+
+			if (_streamCache.ContainsKey(entityId))
+				eventsFile = _streamCache[entityId];
+			else
+			{
+				eventsFile = File.Open(GetFilePath(entityId), FileMode.Append, FileAccess.Write, FileShare.Read);
+				_streamCache.Add(entityId, eventsFile);
 			}
 
-			fileClosing.Stop();
+			if (_writerCache.ContainsKey(entityId))
+				eventsWriter = _writerCache[entityId];
+			else
+			{
+				eventsWriter = new StreamWriter(eventsFile, System.Text.Encoding.UTF8);
+				_writerCache.Add(entityId, eventsWriter);
+			}
 
-			Console.WriteLine($"Writing event duration. Serialization: {serializationStopwatch.ElapsedMilliseconds} ms, {serializationStopwatch.ElapsedTicks} ticks.\tWriting: {writingStopwatch.ElapsedMilliseconds} ms, {writingStopwatch.ElapsedTicks} ticks. Writer closing: {writerClosing.ElapsedMilliseconds} ms. File closing: {fileClosing.ElapsedTicks} ticks.");
+			return eventsWriter;
 		}
 
 		private string GetFilePath(Guid entityId)
@@ -168,6 +190,27 @@ namespace EventSourcing.EventStore.FileSystem
 
 			return value;
 		}
+
+		public void Dispose()
+		{
+			Dispose(true);
+			// Loop through writers and streams and close them.
+			GC.SuppressFinalize(this);
+		}
+		private void Dispose(bool disposing)
+		{
+			if(disposing)
+			{
+				foreach (var w in _writerCache.Values)
+					if (w != null) w.Dispose();
+
+
+				foreach (var s in _streamCache.Values)
+					if (s != null) s.Dispose();
+			}
+		}
+
+
 
 		//private string[] GetColumnsFromCsvLine(string line)
 		//{

@@ -19,7 +19,9 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "EventStores", "EventStores"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "EventSourcing.EventStore.InMemory", "src\EventSourcing.EventStore.InMemory\EventSourcing.EventStore.InMemory.csproj", "{8DD57C3D-4C45-4DC1-BD01-809610B75804}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "EventSourcing.EventStore.FileSystem", "EventSourcing.EventStore.FileSystem\EventSourcing.EventStore.FileSystem.csproj", "{5CE66C85-1613-437E-AEFA-1E069C4CDD83}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "EventSourcing.EventStore.FileSystem", "src\EventSourcing.EventStore.FileSystem\EventSourcing.EventStore.FileSystem.csproj", "{5CE66C85-1613-437E-AEFA-1E069C4CDD83}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "EventSourcing.Benchmarks", "src\EventSourcing.Benchmarks\EventSourcing.Benchmarks.csproj", "{4D83776D-FB69-43B5-82D5-85D9B663454B}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -115,6 +117,18 @@ Global
 		{5CE66C85-1613-437E-AEFA-1E069C4CDD83}.Release|x64.Build.0 = Release|x64
 		{5CE66C85-1613-437E-AEFA-1E069C4CDD83}.Release|x86.ActiveCfg = Release|x86
 		{5CE66C85-1613-437E-AEFA-1E069C4CDD83}.Release|x86.Build.0 = Release|x86
+		{4D83776D-FB69-43B5-82D5-85D9B663454B}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{4D83776D-FB69-43B5-82D5-85D9B663454B}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{4D83776D-FB69-43B5-82D5-85D9B663454B}.Debug|x64.ActiveCfg = Debug|x64
+		{4D83776D-FB69-43B5-82D5-85D9B663454B}.Debug|x64.Build.0 = Debug|x64
+		{4D83776D-FB69-43B5-82D5-85D9B663454B}.Debug|x86.ActiveCfg = Debug|x86
+		{4D83776D-FB69-43B5-82D5-85D9B663454B}.Debug|x86.Build.0 = Debug|x86
+		{4D83776D-FB69-43B5-82D5-85D9B663454B}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{4D83776D-FB69-43B5-82D5-85D9B663454B}.Release|Any CPU.Build.0 = Release|Any CPU
+		{4D83776D-FB69-43B5-82D5-85D9B663454B}.Release|x64.ActiveCfg = Release|x64
+		{4D83776D-FB69-43B5-82D5-85D9B663454B}.Release|x64.Build.0 = Release|x64
+		{4D83776D-FB69-43B5-82D5-85D9B663454B}.Release|x86.ActiveCfg = Release|x86
+		{4D83776D-FB69-43B5-82D5-85D9B663454B}.Release|x86.Build.0 = Release|x86
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

@@ -1,9 +1,16 @@
-﻿using System;
+﻿using BenchmarkDotNet.Running;
+using EventSourcing.Benchmarks;
+using System;
 
 class Program
 {
     static void Main(string[] args)
     {
-        Console.WriteLine("Hello World!");
-    }
+        Console.WriteLine("Running Benchmarks!");
+
+		var summary = BenchmarkRunner.Run<EventStoreFileSystem>();
+
+		Console.WriteLine("Done!");
+		Console.ReadKey();
+	}
 }

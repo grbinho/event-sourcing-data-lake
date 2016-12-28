@@ -1,6 +1,12 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk" ToolsVersion="15.0">
+  <PropertyGroup Label="Configuration">
+    <Optimize>False</Optimize>
+    <PlatformTarget>AnyCPU</PlatformTarget>
+    <DefineConstants>NETCOREAPP1_1</DefineConstants>
+    <GenerateSerializationAssemblies>On</GenerateSerializationAssemblies>
+  </PropertyGroup>
   <PropertyGroup>
-    <OutputType>exe</OutputType>
+    <OutputType>winexe</OutputType>
     <TargetFramework>netcoreapp1.1</TargetFramework>
   </PropertyGroup>
   <ItemGroup>
@@ -10,5 +16,9 @@
   <ItemGroup>
     <PackageReference Include="BenchmarkDotNet" Version="0.10.1" />
     <PackageReference Include="Microsoft.NETCore.App" Version="1.0.1" />
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\EventSourcing.Abstractions\EventSourcing.Abstractions.csproj" />
+    <ProjectReference Include="..\EventSourcing.EventStore.FileSystem\EventSourcing.EventStore.FileSystem.csproj" />
   </ItemGroup>
 </Project>

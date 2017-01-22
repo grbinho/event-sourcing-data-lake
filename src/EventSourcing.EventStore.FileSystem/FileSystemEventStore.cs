@@ -12,7 +12,7 @@ namespace EventSourcing.EventStore.FileSystem
 		private readonly string _tenatId;
 		private readonly string _rootPath;
 
-		// TODO: Concurent dictionaries.
+		// TODO: Concurent dictionaries or some other form of sync for concurrency
 
 		private readonly Dictionary<Guid, string> _pathCache = new Dictionary<Guid, string>();
 		private readonly Dictionary<Guid, StreamWriter> _writerCache = new Dictionary<Guid, StreamWriter>();

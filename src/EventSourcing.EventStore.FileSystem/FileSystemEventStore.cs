@@ -139,14 +139,12 @@ namespace EventSourcing.EventStore.FileSystem
 			return eventsReader;
 		}
 
-		private string GetFilePath(Guid entityId)
+		public string GetFilePath(Guid entityId)
 		{
 			if(_pathCache.ContainsKey(entityId))
 			{
 				return _pathCache[entityId];
 			}
-
-			// Mozda je lakse sve u JSON
 
 			var path = Path.Combine(_rootPath, _tenatId, entityId.ToString(), "events.json");
 			if(!File.Exists(path))

@@ -2,9 +2,15 @@
   <PropertyGroup>
     <TargetFramework>netstandard1.3</TargetFramework>
   </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">
+    <OutputType>library</OutputType>
+  </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|AnyCPU'">
     <OutputType>library</OutputType>
   </PropertyGroup>  
+  <ItemGroup>    
+    <PackageReference Include="Newtonsoft.Json" Version="9.0.1" />
+  </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\EventSourcing.Abstractions\EventSourcing.Abstractions.csproj" />
   </ItemGroup>

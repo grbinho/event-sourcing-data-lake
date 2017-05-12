@@ -3,7 +3,7 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio 15
 VisualStudioVersion = 15.0.26014.0
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "EventSourcing.Abstractions", "src\EventSourcing.Abstractions\EventSourcing.Abstractions.csproj", "{53B54E1D-7344-4D40-8A9A-C61144A7968B}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "EventSourcing.Abstractions", "src\EventSourcing.Abstractions\EventSourcing.Abstractions.csproj", "{53B54E1D-7344-4D40-8A9A-C61144A7968B}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "EventSourcing.EventStore.DataLake", "src\EventSourcing.EventStore.DataLake\EventSourcing.EventStore.DataLake.csproj", "{80BB8D50-9257-46B9-ABF0-C84D909EEC39}"
 EndProject

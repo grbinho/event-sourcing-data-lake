@@ -2,17 +2,12 @@
   <PropertyGroup Label="Configuration">
     <Optimize>True</Optimize>
     <PlatformTarget>AnyCPU</PlatformTarget>
-    <DefineConstants>NETCOREAPP1_1</DefineConstants>
     <GenerateSerializationAssemblies>Off</GenerateSerializationAssemblies>
   </PropertyGroup>
   <PropertyGroup>
     <OutputType>exe</OutputType>
-    <TargetFramework>netcoreapp1.1</TargetFramework>
+    <TargetFramework>netcoreapp2.0</TargetFramework>
   </PropertyGroup>
-  <ItemGroup>
-    <PackageReference Include="BenchmarkDotNet" Version="0.10.1" />
-    <PackageReference Include="Microsoft.NETCore.App" Version="1.1.0" />
-  </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\EventSourcing.Abstractions\EventSourcing.Abstractions.csproj" />
     <ProjectReference Include="..\EventSourcing.EventStore.FileSystem\EventSourcing.EventStore.FileSystem.csproj" />

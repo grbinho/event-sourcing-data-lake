@@ -7,9 +7,9 @@ namespace EventSourcing.EventStore.InMemory
 {
 	public class InMemoryEventStore : IEventStore
 	{
-		IDictionary<Guid, List<Tuple<Type,string>>> _events = new Dictionary<Guid, List<Tuple<Type, string>>>();
+        IDictionary<Guid, List<(Type type,string data)>> _events = new Dictionary<Guid, List<(Type, string)>>();
 
-		public IEnumerable<Tuple<Type,string>> GetEvents(Guid id)
+        public IEnumerable<(Type type,string data)> GetEvents(Guid id)
 		{
 			var events = _events[id];
 			return events;
@@ -27,20 +27,17 @@ namespace EventSourcing.EventStore.InMemory
 		{
 			if (_events.ContainsKey(@event.EntityId))
 			{
-				_events[@event.EntityId].Add(new Tuple<Type, string>(
+				_events[@event.EntityId].Add((
 					typeof(T),
 					JsonConvert.SerializeObject(@event)
 					));
 			}
 			else
 			{
-				_events.Add(@event.EntityId,
-					new List<Tuple<Type, string>>
-					{
-						new Tuple<Type, string>(
-							typeof(T),
-							JsonConvert.SerializeObject(@event)
-					)});
+				_events.Add(@event.EntityId, 
+                    new List<(Type, string)> {
+						(typeof(T), JsonConvert.SerializeObject(@event))
+                    });
 			}
 
 			Console.WriteLine("Streaming event for: {0}", @event.EntityId);

@@ -13,6 +13,6 @@ namespace EventSourcing.Abstractions
 		/// <typeparam name="C">Type of a command</typeparam>
 		/// <param name="events"></param>
 		/// <returns></returns>
-		E Replay(IEnumerable<Tuple<Type, string>> events);
+        E Replay(IEnumerable<(Type type, string data)> events);
     }
 }

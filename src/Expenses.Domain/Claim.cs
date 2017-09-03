@@ -17,6 +17,7 @@ namespace Expenses.Domain
 		public IList<Expense> Expenses { get; set; }
 		public decimal TotalAmount { get; private set; }
 		public long Version { get; private set; }
+
 		#region Constructors
 
 		public Claim()
@@ -181,17 +182,17 @@ namespace Expenses.Domain
 			return CreateClaimMutation(null, command);
 		}
 
-		public Claim Replay(IEnumerable<Tuple<Type,string>> events)
+        public Claim Replay(IEnumerable<(Type type,string data)> events)
 		{
 			var claim = new Claim();
 			// Starting form beginning, there is either create or snapshot event that gives us initial object
 			foreach (var @event in events)
 			{
-				switch (@event.Item1.Name)
+				switch (@event.type.Name)
 				{
 					case "ClaimCreatedEvent":
 						{
-							var evt = JsonConvert.DeserializeObject<ClaimCreatedEvent>(@event.Item2);
+							var evt = JsonConvert.DeserializeObject<ClaimCreatedEvent>(@event.data);
 							var result = CreateClaimMutation(claim, evt.Command);
 							claim = result.Entity;
 							claim.Id = evt.EntityId;
@@ -199,14 +200,14 @@ namespace Expenses.Domain
 						}
 					case "ClaimantChangedEvent":
 						{
-							var evt = JsonConvert.DeserializeObject<ClaimantChangedEvent>(@event.Item2);
+							var evt = JsonConvert.DeserializeObject<ClaimantChangedEvent>(@event.data);
 							var result = ChangeClaimantMutation(claim, evt.Command);
 							claim = result.Entity;
 							break;
 						}
 					case "ClaimSubmittedEvent":
 						{
-							var evt = JsonConvert.DeserializeObject<ClaimSubmittedEvent>(@event.Item2);
+							var evt = JsonConvert.DeserializeObject<ClaimSubmittedEvent>(@event.data);
 							var result = SubmitMutation(claim, evt.Command);
 							claim = result.Entity;
 							break;

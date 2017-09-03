@@ -24,6 +24,7 @@ namespace EventSourcing.Abstractions
 		/// </summary>
 		public string Mutation { get; set; }
 	}
+
 	public abstract class Event<TEntity, TCommand> : Event
     {
 		/// <summary>
@@ -44,7 +45,7 @@ namespace EventSourcing.Abstractions
 		/// <typeparam name="T">Type of event</typeparam>
 		/// <param name="events">Collection of events to replay</param>
 		/// <returns></returns>
-		public static E Replay<E>(this IEnumerable<Tuple<Type, string>> events) where E : IEventSourced<E>, new()
+        public static E Replay<E>(this IEnumerable<(Type, string)> events) where E : IEventSourced<E>, new()
 		{
 			var instance = new E();
 			// Starting form beginning, there is either create or snapshot event that gives us initial object

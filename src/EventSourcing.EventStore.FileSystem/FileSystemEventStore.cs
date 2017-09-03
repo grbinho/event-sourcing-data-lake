@@ -32,7 +32,7 @@ namespace EventSourcing.EventStore.FileSystem
 			_rootPath = storeRootPath;
 		}
 
-		public IEnumerable<Tuple<Type, string>> GetEvents(Guid id)
+        public IEnumerable<(Type type, string data)> GetEvents(Guid id)
 		{
 			return ReadEvents(id);
 		}
@@ -52,7 +52,7 @@ namespace EventSourcing.EventStore.FileSystem
 				StreamEvents<T>(@event);
 		}
 
-		private IEnumerable<Tuple<Type, string>> ReadEvents(Guid entityId)
+        private IEnumerable<(Type type, string data)> ReadEvents(Guid entityId)
 		{
 			var fileContent = string.Empty;
 			// TODO: This can also be cached, including the data. Then we just need to read new data.
@@ -66,7 +66,7 @@ namespace EventSourcing.EventStore.FileSystem
 					// In case of reseting the reader, we get an empty character at the begining of first line.
 					// TODO: Investigate why.
 					var eventLine = JsonConvert.DeserializeObject<EventLine>(line.Trim());
-					yield return new Tuple<Type, string>(Type.GetType(eventLine.Type), eventLine.Data);
+                    yield return (Type.GetType(eventLine.Type), eventLine.Data);
 				}
 			}
 		}
@@ -175,7 +175,7 @@ namespace EventSourcing.EventStore.FileSystem
 		private string UnescapeCsv(string value)
 		{
 			//If string starts with quotes, It has been escaped.
-			if(value.StartsWith("\""))
+            if(value.StartsWith("\"", StringComparison.OrdinalIgnoreCase))
 			{
 				var result = value.TrimStart('"').TrimEnd('"').Replace("\"\"", "\"");
 				return result;
@@ -190,6 +190,7 @@ namespace EventSourcing.EventStore.FileSystem
 			// Loop through writers and streams and close them.
 			GC.SuppressFinalize(this);
 		}
+
 		private void Dispose(bool disposing)
 		{
 			if(disposing)

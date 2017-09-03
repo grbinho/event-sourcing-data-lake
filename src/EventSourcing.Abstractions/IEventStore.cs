@@ -10,7 +10,7 @@ namespace EventSourcing.Abstractions
 	public interface IEventStore
     {
 		// If we return Tuple<Type,string> We need to handle deserialization, but that is probably the only way it can work
-		IEnumerable<Tuple<Type, string>> GetEvents(Guid id);
+        IEnumerable<(Type type, string data)> GetEvents(Guid id);
 		/// <summary>
 		///
 		/// </summary>
